@@ -23,12 +23,8 @@ app.use((req, res, next) => {
     next();
 });
 
-app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'OK' });
-});
-
 const authRoutes = require('./routes/auth');
-app.use('/api/auth', authRoutes);
+app.use('/api', authRoutes);
 
 app.use((req, res) => {
     res.status(404).json({ error: 'Not Found' });
