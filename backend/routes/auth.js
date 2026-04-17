@@ -10,4 +10,8 @@ router.get('/login', async (req, res) => {
     res.json({ message: 'Login endpoint' });
 });
 
+router.get('/logout', async (req, res) => {
+    res.json({ message: 'Logout endpoint' });
+});
+
 module.exports = router;
