@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/db');
+const crypto = require('crypto');
 const argon2 = require('argon2');
 
 const hexToBuffer = (hex) => {
@@ -11,11 +12,11 @@ const bufferToHex = (buffer) => {
     return buffer.toString('hex');
 }
 
-const generateSalt = () => {
+const generateServerSalt = () => {
     return crypto.randomBytes(16).toString('hex');
 }
 
-const ANTI_TIMING_HASH = '$2b$10$eJfKT8Z3h5XqO9KjP4L.7eF8gH9iJ0kL1mN2oP3qR4sT5uV6wX7yZ';
+const ANTI_TIMING_HASH = '$argon2id$v=19$m=65536,t=3,p=4$c29tZXNhbHQxMjM0NTY3OA$' + 'a'.repeat(43);
 
 router.post('/signup', async (req, res) => {
     try {
@@ -35,7 +36,7 @@ router.post('/signup', async (req, res) => {
         }
 
         const serverSalt = generateServerSalt();
-        const hashedHash = await argon2.hash(authHash, {
+        const hashedHash = await argon2.hash(passwordHash, {
             type: argon2.argon2id,
             memoryCost: 65536,
             timeCost: 3,
@@ -45,7 +46,7 @@ router.post('/signup', async (req, res) => {
 
         const result = await pool.query(
             'INSERT INTO users (email, password_hash, server_salt, client_salt, encrypted_vault) VALUES ($1, $2, $3, $4, $5) RETURNING id',
-            [email, passwordHash, serverSalt, clientSalt, null]
+            [email, hashedHash, serverSalt, clientSalt, null]
         );
 
         res.status(201).json({
@@ -67,7 +68,7 @@ router.post('/get-salt', async (req, res) => {
         }
 
         const result = await pool.query(
-            'SELECT client_salt FROM userse WHERE email = $1',
+            'SELECT client_salt FROM users WHERE email = $1',
             [email]
         );
 
@@ -88,7 +89,7 @@ router.post('/login', async (req, res) => {
     try {
         const { email, passwordHash } = req.body;
 
-        if (!email || !authHash) {
+        if (!email || !passwordHash) {
             return res.status(400).json({ message: 'Email and auth hash required' });
         }
 
@@ -104,19 +105,24 @@ router.post('/login', async (req, res) => {
             hash = ANTI_TIMING_HASH;
             userExists = false;
         } else {
-            hash = result.rows[0].password_hash;
+            user = result.rows[0];
+            hash = user.password_hash;
             userExists = true;
         }
 
-        const isValid = await argon2.verify(passwordHash, hash);
+        const isValid = await argon2.verify(hash, passwordHash);
 
         if (!userExists || !isValid) {
             return res.status(401).json({ message: 'Invalid email or password' });
         }
 
+        const encryptedVault = user.encrypted_vault 
+            ? bufferToHex(user.encrypted_vault)
+            : null;
+
         res.json({
             message: 'Login successful',
-            vault: JSON.parse(result.rows[0].encrypted_vault)
+            encryptedVault: encryptedVault
         });
     } catch (err) {
         console.log('Login error:', err.message);
@@ -143,7 +149,7 @@ router.post('/update-vault', async (req, res) => {
 
         const user = result.rows[0];
 
-        const isValid = await argon2.verify(user.hashed_auth, authHash);
+        const isValid = await argon2.verify(user.password_hash, passwordHash);
 
         if (!isValid) {
             console.log('Server: Authentication failed for vault update');
@@ -152,10 +158,10 @@ router.post('/update-vault', async (req, res) => {
 
         console.log('Server: Authentication successful, updating vault...');
 
-        const blobBuffer = hexToBuffer(encryptedBlob);
+        const blobBuffer = hexToBuffer(encryptedVault);
 
         await pool.query(
-            'UPDATE users SET encrypted_blob = $1, updated_at = CURRENT_TIMESTAMP WHERE email = $2',
+            'UPDATE users SET encrypted_vault = $1 WHERE email = $2',
             [blobBuffer, email]
         );
 

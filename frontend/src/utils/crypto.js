@@ -16,7 +16,7 @@ export const deriveKeys = async (masterPassword, clientSalt) => {
             secret: encoder.encode('auth')
         });
 
-        const authHash = bufferToHex(authResult.hash);
+        const passwordHash = bufferToHex(authResult.hash);
         const encResult = await argon2.hash({
             pass: passwordBuffer,
             salt: saltBuffer,
@@ -31,7 +31,7 @@ export const deriveKeys = async (masterPassword, clientSalt) => {
         const encryptionKey = bufferToHex(encResult.hash);
 
         return {
-            authHash,
+            passwordHash,
             encryptionKey
         };
 

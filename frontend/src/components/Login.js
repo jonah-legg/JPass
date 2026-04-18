@@ -1,5 +1,6 @@
 import React from 'react';
 import axios from 'axios';
+import { deriveKeys, decryptVault } from '../utils/crypto';
 
 function Login({ onLoginSuccess}) {
     const [email, setEmail] = React.useState('');
@@ -11,12 +12,22 @@ function Login({ onLoginSuccess}) {
         e.preventDefault();
 
         try {
-            const response = await axios.post(`${API_URL}/api/auth/login`, {
+            const saltResponse = await axios.post(`${API_URL}/api/get-salt`, {
+                email: email
+            });
+            const clientSalt = saltResponse.data.clientSalt;
+
+            const { passwordHash, encryptionKey } = await deriveKeys(password, clientSalt);
+
+            const response = await axios.post(`${API_URL}/api/login`, {
                 email: email,
-                password: password
+                passwordHash: passwordHash
             });
 
-            onLoginSuccess(response.data.vault);
+            const encryptedVault = response.data.encryptedVault;
+            const vault = await decryptVault(encryptedVault, encryptionKey);
+
+            onLoginSuccess(email, passwordHash, encryptionKey, vault, clientSalt);
         } catch (err) {
             setError(err.message);
         }
@@ -38,7 +49,7 @@ function Login({ onLoginSuccess}) {
                 <div>
                     <input
                         type="password"
-                        placeholder="Password"
+                        placeholder="Master Password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
