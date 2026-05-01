@@ -2,7 +2,7 @@ import React from 'react';
 import axios from 'axios';
 import { deriveKeys, decryptVault } from '../utils/crypto';
 
-function Login({ onLoginSuccess}) {
+function Login({ onLoginSuccess }) {
     const [email, setEmail] = React.useState('');
     const [password, setPassword] = React.useState('');
     const [error, setError] = React.useState('');
@@ -36,9 +36,10 @@ function Login({ onLoginSuccess}) {
     return (
         <div>
             <form onSubmit={handleSubmit}>
-                <div>
+                <div className="mb-3">
                     <input
                         type="email"
+                        className="form-control"
                         placeholder="Email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -46,9 +47,10 @@ function Login({ onLoginSuccess}) {
                     />
                 </div>
 
-                <div>
+                <div className="mb-3">
                     <input
                         type="password"
+                        className="form-control"
                         placeholder="Master Password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -56,12 +58,12 @@ function Login({ onLoginSuccess}) {
                     />
                 </div>
 
-                {error && <p>{error.message}</p>}
+                {error && <p className="text-danger small">{error}</p>}
 
-                <button type="submit">Login</button>
+                <button type="submit" className="btn btn-primary w-100">Login</button>
             </form>
         </div>
-    )
+    );
 }
 
 export default Login;

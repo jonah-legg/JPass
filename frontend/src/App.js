@@ -2,6 +2,7 @@ import React from 'react';
 import Vault from './components/Vault';
 import Login from './components/Login';
 import Signup from './components/Signup';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
     const [isAuthenticated, setIsAuthenticated] = React.useState(false);
@@ -54,21 +55,35 @@ function App() {
     }
 
     return (
-        <div>
-            <div>
-                <h1>JPass</h1>
+        <div className="container d-flex flex-column align-items-center justify-content-center min-vh-100">
+            <div className="card shadow p-4" style={{ maxWidth: '450px', width: '100%' }}>
+                <h1 className="text-center mb-4 fw-bold">JPass</h1>
                 
-                <div>
-                    <button onClick={() => setShowLogin(true)}>Login</button>
-                    <button onClick={() => setShowLogin(false)}>Sign Up</button>
-                </div>
-            </div>
+                <ul className="nav nav-pills nav-justified mb-4">
+                    <li className="nav-item">
+                        <button
+                            className={`nav-link ${showLogin ? 'active' : ''}`}
+                            onClick={() => setShowLogin(true)}
+                        >
+                            Login
+                        </button>
+                    </li>
+                    <li className="nav-item">
+                        <button
+                            className={`nav-link ${!showLogin ? 'active' : ''}`}
+                            onClick={() => setShowLogin(false)}
+                        >
+                            Sign Up
+                        </button>
+                    </li>
+                </ul>
 
-            {showLogin ? (
-                <Login onLoginSuccess={handleLoginSuccess} />
-            ) : (
-                <Signup onSignupSuccess={handleSignupSuccess} />
-            )}
+                {showLogin ? (
+                    <Login onLoginSuccess={handleLoginSuccess} />
+                ) : (
+                    <Signup onSignupSuccess={handleSignupSuccess} />
+                )}
+            </div>
         </div>
     );
 }

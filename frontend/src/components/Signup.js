@@ -2,7 +2,7 @@ import React from 'react';
 import axios from 'axios';
 import { generateClientSalt, deriveKeys, encryptVault } from '../utils/crypto';
 
-function Signup({ onSignupSuccess}) {
+function Signup({ onSignupSuccess }) {
     const [email, setEmail] = React.useState('');
     const [password, setPassword] = React.useState('');
     const [confirmPassword, setConfirmPassword] = React.useState('');
@@ -26,7 +26,7 @@ function Signup({ onSignupSuccess}) {
                 clientSalt: clientSalt
             });
 
-            console.log(response.data)
+            console.log(response.data);
 
             const emptyVault = { passwords: [] };
             const encryptedVault = await encryptVault(emptyVault, encryptionKey);
@@ -46,9 +46,10 @@ function Signup({ onSignupSuccess}) {
     return (
         <div>
             <form onSubmit={handleSubmit}>
-                <div>
+                <div className="mb-3">
                     <input
                         type="email"
+                        className="form-control"
                         placeholder="Email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -56,9 +57,10 @@ function Signup({ onSignupSuccess}) {
                     />
                 </div>
 
-                <div>
+                <div className="mb-3">
                     <input
                         type="password"
+                        className="form-control"
                         placeholder="Master Password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -66,9 +68,10 @@ function Signup({ onSignupSuccess}) {
                     />
                 </div>
 
-                <div>
+                <div className="mb-3">
                     <input
                         type="password"
+                        className="form-control"
                         placeholder="Confirm Master Password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
@@ -76,12 +79,12 @@ function Signup({ onSignupSuccess}) {
                     />
                 </div>
 
-                {error && <p>{error.message}</p>}
+                {error && <p className="text-danger small">{error}</p>}
 
-                <button type="submit">Sign Up</button>
+                <button type="submit" className="btn btn-primary w-100">Sign Up</button>
             </form>
         </div>
-    )
+    );
 }
 
 export default Signup;

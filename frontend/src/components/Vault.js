@@ -14,40 +14,25 @@ function Vault({ email, passwordHash, encryptionKey, vault, setVault, onLogout }
     const API_URL = process.env.REACT_APP_BACKEND;
 
     const saveVaultToServer = async (updatedVault) => {
-    try {
-        console.log('=== SAVE VAULT TO SERVER ===');
-        console.log('email:', email);
-        console.log('passwordHash:', passwordHash);
-        console.log('passwordHash type:', typeof passwordHash);
-        console.log('passwordHash length:', passwordHash?.length);
-        console.log('encryptionKey:', encryptionKey ? 'exists' : 'undefined');
-        
-        const encryptedVault = await encryptVault(updatedVault, encryptionKey);
-        
-        console.log('encryptedVault:', encryptedVault);
-        console.log('encryptedVault length:', encryptedVault?.length);
+        try {
+            const encryptedVault = await encryptVault(updatedVault, encryptionKey);
+            const payload = {
+                email: email,
+                passwordHash: passwordHash,
+                encryptedVault: encryptedVault
+            };
 
-        const payload = {
-            email: email,
-            passwordHash: passwordHash,
-            encryptedVault: encryptedVault
-        };
-
-        console.log('Payload to send:', JSON.stringify(payload, null, 2));
-
-        await axios.post(`${API_URL}/api/update-vault`, payload);
-
-        console.log('✓ Client: Vault saved successfully');
-    } catch (err) {
-        console.error('❌ Save vault error:', err);
-        console.error('Response data:', err.response?.data);
-        alert('Failed to save vault: ' + (err.response?.data?.message || err.message));
-    }
-};
+            await axios.post(`${API_URL}/api/update-vault`, payload);
+        } catch (err) {
+            console.error('Save vault error:', err);
+            console.error('Response data:', err.response?.data);
+            alert('Failed to save vault: ' + (err.response?.data?.message || err.message));
+        }
+    };
 
     const handleAddPassword = async (e) => {
         e.preventDefault();
-        
+
         const updatedVault = {
             passwords: [
                 ...vault.passwords,
@@ -85,91 +70,123 @@ function Vault({ email, passwordHash, encryptionKey, vault, setVault, onLogout }
     };
 
     return (
-        <div>
-            <div>
-                <h2>Your Password Vault</h2>
-                <button onClick={onLogout}>Logout</button>
+        <div className="container py-4">
+            <div className="d-flex justify-content-between align-items-center mb-3">
+                <h2 className="mb-0">Your Password Vault</h2>
+                <button className="btn btn-outline-danger" onClick={onLogout}>Logout</button>
             </div>
 
-            <p>Logged in as: {email}</p>
+            <p className="text-muted mb-4">Logged in as: {email}</p>
 
-            <button onClick={() => setShowAddForm(!showAddForm)}>{showAddForm ? 'Cancel' : 'Add Password'}</button>
+            <button
+                className={`btn ${showAddForm ? 'btn-secondary' : 'btn-primary'} mb-4`}
+                onClick={() => setShowAddForm(!showAddForm)}
+            >
+                {showAddForm ? 'Cancel' : 'Add Password'}
+            </button>
 
             {showAddForm && (
-                <form onSubmit={handleAddPassword}>
-                    <h3>Add New Password</h3>
-                    
-                    <input
-                        type="text"
-                        placeholder="Site Name"
-                        value={newEntry.site}
-                        onChange={(e) => setNewEntry({ ...newEntry, site: e.target.value })}
-                        required
-                    />
+                <div className="card mb-4">
+                    <div className="card-body">
+                        <form onSubmit={handleAddPassword}>
+                            <h3 className="card-title mb-3">Add New Password</h3>
 
-                    <input
-                        type="text"
-                        placeholder="URL"
-                        value={newEntry.url}
-                        onChange={(e) => setNewEntry({ ...newEntry, url: e.target.value })}
-                    />
+                            <div className="mb-3">
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder="Site Name"
+                                    value={newEntry.site}
+                                    onChange={(e) => setNewEntry({ ...newEntry, site: e.target.value })}
+                                    required
+                                />
+                            </div>
 
-                    <input
-                        type="text"
-                        placeholder="Username/Email"
-                        value={newEntry.username}
-                        onChange={(e) => setNewEntry({ ...newEntry, username: e.target.value })}
-                        required
-                    />
+                            <div className="mb-3">
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder="URL"
+                                    value={newEntry.url}
+                                    onChange={(e) => setNewEntry({ ...newEntry, url: e.target.value })}
+                                />
+                            </div>
 
-                    <div>
-                        <input
-                            type="text"
-                            placeholder="Password"
-                            value={newEntry.password}
-                            onChange={(e) => setNewEntry({ ...newEntry, password: e.target.value })}
-                            required
-                        />
+                            <div className="mb-3">
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder="Username/Email"
+                                    value={newEntry.username}
+                                    onChange={(e) => setNewEntry({ ...newEntry, username: e.target.value })}
+                                    required
+                                />
+                            </div>
+
+                            <div className="mb-3">
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder="Password"
+                                    value={newEntry.password}
+                                    onChange={(e) => setNewEntry({ ...newEntry, password: e.target.value })}
+                                    required
+                                />
+                            </div>
+
+                            <button type="submit" className="btn btn-success">Save Password</button>
+                        </form>
                     </div>
-
-                    <button type="submit">Save Password</button>
-                </form>
+                </div>
             )}
 
-            <h3>Saved Passwords ({vault.passwords.length})</h3>
+            <h3 className="mb-3">Saved Passwords ({vault.passwords.length})</h3>
 
             {vault.passwords.length === 0 ? (
-                <p>No passwords saved yet. Click "Add Password" to get started.</p>
+                <p className="text-muted">No passwords saved yet. Click "Add Password" to get started.</p>
             ) : (
-                <div>
+                <div className="row g-3">
                     {vault.passwords.map((entry) => (
-                        <div key={entry.id}>
-                            <div>
-                                <div>
-                                    <h4>{entry.site}</h4>
-                                    {entry.url && (
-                                        <p>
-                                            <a 
-                                                href={entry.url.startsWith('http') ? entry.url : `https://${entry.url}`} 
-                                                target="_blank" 
-                                                rel="noopener noreferrer"
-                                            >
-                                                {entry.url}
-                                            </a>
-                                        </p>
-                                    )}
-                                    <p><strong>Username:</strong> {entry.username}</p>
-                                    <p>
-                                        <strong>Password:</strong>{' '}
-                                        {visiblePasswords[entry.id] ? (
-                                            <span style={{ fontFamily: 'monospace' }}>{entry.password}</span>
-                                        ) : (
-                                            <span>••••••••</span>
+                        <div key={entry.id} className="col-12">
+                            <div className="card">
+                                <div className="card-body d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h4 className="card-title mb-1">{entry.site}</h4>
+                                        {entry.url && (
+                                            <p className="mb-1">
+                                                <a
+                                                    href={entry.url.startsWith('http') ? entry.url : `https://${entry.url}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-decoration-none"
+                                                >
+                                                    {entry.url}
+                                                </a>
+                                            </p>
                                         )}
-                                        <button onClick={() => togglePasswordVisibility(entry.id)}>{visiblePasswords[entry.id] ? 'Hide' : 'Show'}</button>
-                                    </p>
+                                        <p className="mb-1"><strong>Username:</strong> {entry.username}</p>
+                                        <p className="mb-0">
+                                            <strong>Password:</strong>{' '}
+                                            {visiblePasswords[entry.id] ? (
+                                                <span className="font-monospace">{entry.password}</span>
+                                            ) : (
+                                                <span>••••••••</span>
+                                            )}
+                                            <button
+                                                className="btn btn-sm btn-outline-secondary ms-2"
+                                                onClick={() => togglePasswordVisibility(entry.id)}
+                                            >
+                                                {visiblePasswords[entry.id] ? 'Hide' : 'Show'}
+                                            </button>
+                                        </p>
+                                    </div>
+                                    <button
+                                        className="btn btn-sm btn-outline-danger"
+                                        onClick={() => handleDeletePassword(entry.id)}
+                                    >
+                                        Delete
+                                    </button>
                                 </div>
-                                <button onClick={() => handleDeletePassword(entry.id)}>Delete</button>
                             </div>
                         </div>
                     ))}
